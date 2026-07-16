@@ -5,7 +5,7 @@
   "identifier": "com.replit.localdocumentrag",
   "build": {
     "frontendDist": "../dist/public",
-    "beforeBuildCommand": "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/web run build"
+    "beforeBuildCommand": "pnpm --filter @workspace/web run build:desktop"
   },
   "app": {
     "withGlobalTauri": false,
