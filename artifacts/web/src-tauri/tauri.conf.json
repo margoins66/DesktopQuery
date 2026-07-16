@@ -44,9 +44,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgxOURFQ0M2MTgyMERFOTYKUldTVzNpQVl4dXlkZ2JUUXYzTFh5QmE0Y1puT1IwS3VYWVZIaE5jUkJ2TlJ6V09zOGlNUUs4Y3YK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENFRTk2RThDNEY1QUNFQUMKUldTc3pscFBqRzdwempBeDQ0dHNEK0IwYzNZSVd3U0dOOWFZQ0d4ZmhHeEw2SXFGK2xFdWZUK20K",
       "endpoints": [
-        "https://github.com/replit/local-document-rag/releases/latest/download/latest.json"
+        "https://github.com/margoins66/DesktopQuery/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
