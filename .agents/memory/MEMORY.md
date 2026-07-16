@@ -1,0 +1,5 @@
+- [RAG backend contract](rag-backend.md) — strict grounding rules, provider-swap seam, and Tauri-portability intent for the FastAPI backend in `backend/`.
+- [RAG web frontend wiring](rag-frontend.md) — web artifact talks to FastAPI via /__rag proxy (never the Node api-server); no fabricated data; Radix Select empty-value crash gotcha.
+- [RAG E2E testing](e2e-testing.md) — vitest is firewall-blocked; E2E suite uses node:test + esbuild bundle (for import.meta.env) and hits the live backend through a real Vite proxy.
+- [Desktop (Tauri) packaging](desktop-tauri-packaging.md) — Tauri shell + PyInstaller sidecar; build via workflow (not detached bash); nix-shell for webkit; deb works, AppImage needs FUSE.
+- [RAG mobile (Expo)](rag-mobile.md) — talks to FastAPI directly (not Node api-server); user-configurable base URL default via web `/__rag` proxy; design tokens/fonts mirror web; useColors dark-key cast gotcha.

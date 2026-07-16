@@ -1,0 +1,30 @@
+[package]
+name = "local-document-rag"
+version = "1.0.0"
+description = "Local-first Document RAG desktop app"
+authors = ["Replit"]
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Self-update support: the updater plugin checks a signed manifest endpoint and
+# downloads/installs verified updates; the process plugin lets us relaunch the
+# app after an update is applied. Desktop only — mobile has its own update path.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

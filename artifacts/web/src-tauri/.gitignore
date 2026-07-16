@@ -1,0 +1,14 @@
+# Rust build output
+/target
+
+# Generated mobile/desktop scaffolding
+/gen
+
+# Backend sidecar binaries are produced by scripts/desktop/build-sidecar.sh
+/binaries
+
+# Updater signing private key. The PUBLIC key lives in tauri.conf.json and is
+# safe to commit; the PRIVATE key must never be committed. Supply it at build
+# time via TAURI_SIGNING_PRIVATE_KEY (see docs/desktop-signing.md).
+/.tauri-updater-key
+/.tauri-updater-key.pub

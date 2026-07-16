@@ -1,0 +1,13 @@
+uploads = []
+
+[[generated]]
+id = "W_GaAgSvVyTzWNPy9gtzn"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "rag app icon"
+
+[[outputs]]
+id = "jyQbOm-yhZ02reVNMqvyp"
+uri = "file://.github/workflows/desktop-release.yml"
+type = "unspecified"
+title = "desktop-release.yml — paste this into GitHub"

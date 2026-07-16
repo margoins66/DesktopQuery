@@ -1,0 +1,469 @@
+The goal is to create a local-first Retrieval-Augmented Generation app that lets me search, summarize, compare, and ask questions about my contracts and business documents. The app should behave like ChatGPT, but it must only answer using my indexed document library.
+
+Build this in phases. Start with a working MVP first, then structure the code so advanced features can be added later.
+
+PHASE 1: LOCAL RAG MVP
+
+Create a desktop app for Windows with the following stack:
+
+Frontend:
+- React
+- TypeScript
+- Tailwind CSS
+
+Desktop framework:
+- Tauri preferred
+- Electron acceptable if Tauri is not practical
+
+Backend:
+- Python
+- FastAPI
+
+Database:
+- SQLite for metadata, conversations, document records, and settings
+
+Vector database:
+- ChromaDB
+
+Document processing:
+- PyMuPDF for PDFs
+- python-docx for Word files
+- openpyxl or pandas for Excel files
+- markdown/text parsers for Markdown and text
+- BeautifulSoup for HTML
+- python-pptx for PowerPoint
+- pytesseract for OCR on scanned PDFs where possible
+
+Embeddings:
+- Default local embedding model if possible
+- Support OpenAI embeddings as an optional setting later
+- Structure the embedding provider so it can be swapped
+
+LLM support:
+- Ollama for local models
+- Optional OpenAI
+- Optional Anthropic Claude
+- The user should be able to choose the model provider in Settings
+
+CORE APP REQUIREMENTS
+
+The app must include these main navigation areas:
+
+1. Dashboard
+2. Chat
+3. Documents
+4. Search
+5. Comparisons
+6. Summaries
+7. Settings
+
+DASHBOARD
+
+The dashboard should show:
+
+- Total number of documents
+- Number of indexed documents
+- Number of failed documents
+- Last indexing time
+- Indexed folders
+- Recent uploads
+- Storage used
+- Current model provider
+- Current vector database status
+
+DOCUMENT INGESTION
+
+Allow me to:
+
+- Upload individual documents
+- Drag and drop documents
+- Batch upload multiple documents
+- Select one or more local folders to monitor
+- Add folders such as:
+  - C:\Contracts
+  - C:\Projects
+  - D:\Legal Documents
+
+Supported file types:
+
+- PDF
+- DOCX
+- XLSX
+- TXT
+- MD
+- RTF
+- PPTX
+- HTML
+- CSV
+
+When a file is indexed:
+
+- Extract all readable text
+- Preserve document title when possible
+- Preserve headings when possible
+- Preserve page numbers for PDFs
+- Preserve table content where possible
+- Store file metadata
+- Split content into semantic chunks
+- Generate embeddings
+- Store chunks and embeddings in ChromaDB
+- Store metadata in SQLite
+
+FOLDER MONITORING
+
+The app should monitor selected folders.
+
+When a file is added, modified, or deleted:
+
+- Detect the change
+- Update the document index automatically
+- Re-index modified files
+- Remove deleted files from the index
+- Show indexing status in the UI
+
+CHAT INTERFACE
+
+Create a modern chat UI similar to ChatGPT.
+
+Chat features:
+
+- Conversation history
+- Streaming responses
+- Follow-up questions
+- Source citations
+- Clickable source references
+- Dark mode
+- Light mode
+- Ability to clear conversation
+- Ability to save/bookmark important conversations
+
+RAG ANSWERING RULES
+
+The assistant must follow these rules:
+
+- Only answer using indexed document content
+- Never fabricate information
+- If the answer cannot be found, respond exactly:
+  “I could not locate that information in the indexed documents.”
+- Every answer should include citations when possible
+- Citations should include:
+  - Document name
+  - Page number if available
+  - Section heading if available
+  - Relevant quoted text
+  - Confidence score
+
+Example questions the app should support:
+
+- “What is the termination clause in the Microsoft contract?”
+- “What is the payment schedule?”
+- “Does Vendor A require cyber insurance?”
+- “What contracts expire this year?”
+- “Which contracts contain indemnification language?”
+- “Which documents reference SharePoint?”
+- “Which SOW mentions Azure?”
+
+SEARCH
+
+Build a Search page that supports:
+
+- Semantic search
+- Keyword search
+- Boolean search if practical
+- Filters by:
+  - Document name
+  - Vendor
+  - Date
+  - Folder
+  - File type
+  - Tags
+
+Search results should show:
+
+- Matching document
+- Relevant snippet
+- Page number if available
+- Section heading if available
+- Relevance score
+- Button to open or preview the source
+
+DOCUMENTS PAGE
+
+The Documents page should list all indexed documents.
+
+Each document row should show:
+
+- File name
+- Document title
+- File type
+- Folder path
+- Created date
+- Modified date
+- Indexed date
+- Indexing status
+- Number of chunks
+- Tags
+- Actions:
+  - View metadata
+  - Re-index
+  - Remove from index
+  - Summarize
+  - Ask about this document
+
+COMPARISONS PAGE
+
+Create a contract comparison feature.
+
+Allow me to select:
+
+- Document A vs Document B
+- Multiple documents
+
+The app should compare selected documents across:
+
+- Payment terms
+- Deliverables
+- Due dates
+- Insurance requirements
+- Termination clauses
+- Intellectual property
+- Confidentiality
+- Liability
+- Indemnification
+- Warranty
+- Service Level Agreements
+- Renewal clauses
+- Governing law
+- Pricing
+- Scope
+
+Return the comparison as a table with:
+
+- Topic
+- Document A finding
+- Document B finding
+- Differences
+- Risk notes
+- Source citations
+
+SUMMARIES PAGE
+
+Create summary generation features.
+
+Supported summary styles:
+
+- Executive Summary
+- One Page Summary
+- Bullet Summary
+- Legal Summary
+- Technical Summary
+- Risk Summary
+- Vendor Summary
+
+Each summary should include citations back to the document.
+
+RISK ANALYSIS
+
+Add a basic risk detection workflow that can identify:
+
+- Missing signatures
+- Missing dates
+- Conflicting language
+- Missing insurance requirements
+- Unlimited liability
+- Unusual indemnification
+- Automatic renewals
+- One-sided clauses
+- Missing payment terms
+- Potential contract risks
+
+The first version can use prompt-based analysis over retrieved chunks. Design it so rules-based detection can be added later.
+
+METADATA EXTRACTION
+
+Extract and store document metadata where possible:
+
+- Document title
+- Vendor
+- Customer
+- Effective date
+- Expiration date
+- Document type
+- Author
+- Folder
+- File name
+- Tags
+- Created date
+- Modified date
+
+If metadata cannot be confidently extracted, leave it blank rather than guessing.
+
+SETTINGS PAGE
+
+Create a Settings page with:
+
+- Model provider selection
+- Ollama base URL
+- OpenAI API key field
+- Anthropic API key field
+- Embedding model selection
+- Chunk size setting
+- Chunk overlap setting
+- Indexed folder management
+- Rebuild index button
+- Clear index button
+- Theme selection
+- Local-only mode toggle
+
+SECURITY REQUIREMENTS
+
+Security is very important.
+
+The app should be local-first.
+
+Requirements:
+
+- Documents remain on my computer by default
+- No telemetry
+- No analytics
+- No external uploads unless I explicitly enable cloud AI
+- Show a clear warning when cloud AI is enabled
+- Store API keys securely where possible
+- Do not log full document contents
+- Design the vector database so encryption can be added
+- Include a Local Only mode
+
+EXPORT FEATURES
+
+If feasible in the MVP, add export buttons for:
+
+- Export answer to Word
+- Export comparison to Excel
+- Export summary to PDF
+
+If this is too much for the first build, create the UI placeholders and stub functions for a later phase.
+
+PHASE 2 STRUCTURE
+
+Even if Phase 2 is not fully implemented yet, structure the code so these features can be added:
+
+- SharePoint Online integration through Microsoft Graph
+- Document version awareness
+- Compare different versions of the same contract
+- Entity extraction for parties, contract values, dates, obligations, governing law, and key contacts
+- Contract timeline generation
+- Duplicate contract detection
+- Obligation and deadline extraction
+- Action-item checklist generation
+- Prompt template library
+- Favorite prompts
+- Executive report generation
+
+SHAREPOINT FUTURE FEATURE
+
+Prepare the architecture for future SharePoint integration.
+
+The future feature should allow:
+
+- Microsoft 365 authentication
+- Selecting SharePoint document libraries
+- Indexing SharePoint files
+- Preserving SharePoint metadata
+- Tracking SharePoint versions
+- Re-indexing changed SharePoint documents
+
+IMPLEMENTATION INSTRUCTIONS
+
+Please build the app step by step.
+
+Step 1:
+Create the project structure for the desktop app, frontend, backend, database, and document indexing modules.
+
+Step 2:
+Implement the FastAPI backend with endpoints for:
+- Health check
+- Add document
+- Add folder
+- List documents
+- Index document
+- Search documents
+- Ask question
+- Generate summary
+- Compare documents
+- Manage settings
+
+Step 3:
+Implement SQLite tables for:
+- documents
+- document_chunks
+- conversations
+- messages
+- indexed_folders
+- settings
+- tags
+- document_tags
+
+Step 4:
+Implement document ingestion and text extraction.
+
+Step 5:
+Implement chunking, embeddings, and ChromaDB storage.
+
+Step 6:
+Implement the RAG question-answering pipeline.
+
+Step 7:
+Implement source citations.
+
+Step 8:
+Implement the React frontend pages.
+
+Step 9:
+Connect frontend to backend.
+
+Step 10:
+Implement folder monitoring.
+
+Step 11:
+Implement summaries, comparisons, and basic risk analysis.
+
+Step 12:
+Add settings, theme support, and local/cloud model configuration.
+
+Step 13:
+Add error handling, loading states, and clean UI polish.
+
+Step 14:
+Add a README with setup instructions for Windows.
+
+QUALITY REQUIREMENTS
+
+The app should be clean, modern, and professional.
+
+The UI should feel like a polished productivity app, not a demo.
+
+Use clear empty states, loading indicators, and error messages.
+
+The code should be modular and maintainable.
+
+Avoid hardcoding providers. Use provider interfaces for:
+
+- LLMs
+- Embeddings
+- Vector databases
+- Document parsers
+
+Do not create fake results. If functionality is stubbed, label it clearly as “Coming Soon” or “Not Implemented Yet.”
+
+FINAL OUTPUT
+
+When complete, provide:
+
+- A working local app
+- Full source code
+- Setup instructions
+- Windows run instructions
+- Explanation of architecture
+- List of implemented features
+- List of known limitations
+- Recommended next steps
