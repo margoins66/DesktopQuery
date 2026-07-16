@@ -1,0 +1,158 @@
+name: Build desktop installers
+
+# Builds the "Local Document RAG" desktop app (Tauri shell + PyInstaller
+# backend sidecar) for macOS, Windows and Linux and attaches the installers to
+# a draft GitHub Release.
+#
+# PyInstaller and Tauri do NOT cross-compile, so each installer must be built
+# on its own OS. This matrix does exactly that on GitHub-hosted runners.
+#
+# Trigger:
+#   * push a tag like `v1.0.0`  -> builds + creates/updates a draft Release
+#   * "Run workflow" (manual)   -> builds the artifacts without releasing
+#
+# macOS signing/notarization is optional and driven by repo secrets — see
+# scripts/desktop/README.md. Without them the mac build is unsigned (still
+# installable, but Gatekeeper shows a warning on first launch).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Apple Silicon (arm64)
+          - platform: macos-latest
+            triple: aarch64-apple-darwin
+            args: "--target aarch64-apple-darwin"
+          # Intel macOS (x86_64)
+          - platform: macos-13
+            triple: x86_64-apple-darwin
+            args: "--target x86_64-apple-darwin"
+          # Windows (msi + nsis)
+          - platform: windows-latest
+            triple: x86_64-pc-windows-msvc
+            args: ""
+          # Linux (deb + AppImage) — real runner has FUSE, unlike the sandbox
+          - platform: ubuntu-22.04
+            triple: x86_64-unknown-linux-gnu
+            args: "--bundles deb,appimage"
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.triple }}
+
+      - name: Cache Rust build
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: artifacts/web/src-tauri -> target
+
+      - name: Install Linux system dependencies
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev \
+            librsvg2-dev \
+            patchelf \
+            tesseract-ocr \
+            xvfb
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install PyInstaller and backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r backend/requirements.txt
+
+      # Freeze the FastAPI backend into a standalone binary named for this OS's
+      # Rust target triple, e.g. rag-backend-x86_64-pc-windows-msvc.exe.
+      - name: Build backend sidecar
+        shell: bash
+        env:
+          TAURI_TARGET_TRIPLE: ${{ matrix.triple }}
+        run: bash scripts/desktop/build-sidecar.sh
+
+      # Smoke-test the frozen backend BEFORE the long Tauri build so a broken
+      # freeze (missing hidden import, wrong sidecar name) fails fast. Launches
+      # the sidecar exactly as the Tauri shell does at runtime and asserts it
+      # answers /api/health and a real (LLM-free) query on 127.0.0.1:8765.
+      # GUI installers can't be driven headlessly on CI runners; the sidecar is
+      # the part that silently breaks during packaging, so we test it directly.
+      - name: Smoke-test backend sidecar
+        shell: bash
+        env:
+          TAURI_TARGET_TRIPLE: ${{ matrix.triple }}
+        run: python scripts/desktop/smoke-test.py
+
+      # Builds the frontend (via tauri.conf.json beforeBuildCommand), compiles
+      # the Rust shell, bundles the OS-native installers and — on tag pushes —
+      # uploads them to a draft GitHub Release.
+      - name: Build and release Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS code signing + notarization (optional).
+          # Leave unset to produce an unsigned build (see README).
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: artifacts/web
+          # Only create a Release on tag pushes; manual runs just build.
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: "Local Document RAG __VERSION__"
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      # Prove the REAL runtime path, not just the sidecar: launch the freshly
+      # BUILT Tauri shell headlessly (xvfb) and confirm it picks a runtime
+      # ephemeral port (not the fixed 8765 the sidecar smoke test pins), spawns
+      # the sidecar via the externalBin resolution, and answers /api/health + a
+      # keyword query on that port. Runs after the build so the shell binary
+      # exists. GUI webviews can't be scripted reliably headlessly on
+      # macOS/Windows runners, so this shell-level check is Linux-only; the
+      # get_backend_port -> resolveApiBase JS URL contract is covered by the
+      # `test:config` unit test.
+      - name: Shell-level smoke test (Linux)
+        if: startsWith(matrix.platform, 'ubuntu')
+        shell: bash
+        env:
+          TAURI_TARGET_TRIPLE: ${{ matrix.triple }}
+        run: python scripts/desktop/shell-smoke-test.py
