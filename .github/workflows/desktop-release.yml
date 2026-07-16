@@ -36,8 +36,9 @@ jobs:
           - platform: macos-latest
             triple: aarch64-apple-darwin
             args: "--target aarch64-apple-darwin"
-          # Intel macOS (x86_64)
-          - platform: macos-13
+          # Intel macOS (x86_64) — macos-13 runners were retired; the
+          # macos-15-intel label is the remaining Intel runner pool.
+          - platform: macos-15-intel
             triple: x86_64-apple-darwin
             args: "--target x86_64-apple-darwin"
           # Windows (msi + nsis)
