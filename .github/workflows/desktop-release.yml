@@ -136,6 +136,9 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: artifacts/web
+          # Monorepo: the pnpm lockfile lives at the repo root, so tauri-action
+          # can't auto-detect pnpm from projectPath — tell it explicitly.
+          tauriScript: pnpm tauri
           # Only create a Release on tag pushes; manual runs just build.
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           releaseName: "Local Document RAG __VERSION__"
