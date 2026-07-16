@@ -21,6 +21,11 @@ on:
       - "v*"
   workflow_dispatch:
 
+# tauri-action creates the draft Release with the default GITHUB_TOKEN, which
+# is read-only unless contents: write is granted explicitly.
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
