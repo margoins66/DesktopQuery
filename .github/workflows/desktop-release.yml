@@ -90,8 +90,27 @@ jobs:
             tesseract-ocr \
             xvfb
 
+      # The workspace's pnpm-workspace.yaml deliberately excludes all
+      # non-Linux native binaries (rollup, esbuild, lightningcss, oxide...)
+      # via `"pkg>platform-dep": "-"` overrides — an optimization for the
+      # linux-x64 Replit environment. CI builds on macOS/Windows need those
+      # binaries, so strip the exclusion overrides before installing.
+      - name: Re-enable cross-platform native binaries
+        shell: bash
+        run: |
+          python3 - <<'EOF'
+          import re
+          path = "pnpm-workspace.yaml"
+          lines = open(path).read().splitlines(keepends=True)
+          out = [l for l in lines if not re.match(r'''\s*["']?[^:#]+>[^:#]+["']?:\s*["']?-["']?\s*$''', l)]
+          open(path, "w").writelines(out)
+          print(f"Removed {len(lines) - len(out)} platform-exclusion overrides")
+          EOF
+
       - name: Install JS dependencies
-        run: pnpm install --frozen-lockfile
+        # --no-frozen-lockfile: the override strip above intentionally
+        # diverges from the committed lockfile.
+        run: pnpm install --no-frozen-lockfile
 
       - name: Install PyInstaller and backend dependencies
         run: |
