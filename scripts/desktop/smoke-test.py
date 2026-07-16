@@ -119,7 +119,12 @@ def main() -> None:
     sidecar = find_sidecar()
     print(f"==> Smoke-testing sidecar: {sidecar}")
 
-    with tempfile.TemporaryDirectory(prefix="rag-smoke-") as data_dir:
+    # ignore_cleanup_errors: on Windows the sidecar's SQLite file can still be
+    # locked for a moment after process exit; cleanup failure isn't a test
+    # failure.
+    with tempfile.TemporaryDirectory(
+        prefix="rag-smoke-", ignore_cleanup_errors=True
+    ) as data_dir:
         env = {
             **os.environ,
             "PORT": str(PORT),
