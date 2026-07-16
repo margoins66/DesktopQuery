@@ -145,6 +145,11 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Updater artifact signing (minisign). The matching public key is
+          # committed in tauri.conf.json (plugins.updater.pubkey); Tauri
+          # refuses to build with a pubkey configured but no private key.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # macOS code signing + notarization (optional). NOTE: passing the
           # APPLE_* vars as empty strings still triggers a codesign attempt in
           # tauri-action, so they must be omitted entirely until the repo
